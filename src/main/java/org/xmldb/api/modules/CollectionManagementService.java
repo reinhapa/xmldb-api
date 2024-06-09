@@ -39,7 +39,7 @@
  */
 package org.xmldb.api.modules;
 
-import org.xmldb.api.base.Collection;
+import org.xmldb.api.base.ChildCollection;
 import org.xmldb.api.base.Service;
 import org.xmldb.api.base.XMLDBException;
 
@@ -52,16 +52,17 @@ import org.xmldb.api.base.XMLDBException;
 public interface CollectionManagementService extends Service {
 
   /**
-   * Creates a new {@code Collection} in the database. The default configuration of the database is
-   * determined by the implementer. The new {@code Collection} will be created relative to the
-   * {@code Collection} from which the {@code CollectionManagementService} was retrieved.
+   * Creates a new {@code ChildCollection} in the database. The default configuration of the
+   * database is determined by the implementer. The new {@code ChildCollection} will be created
+   * relative to the {@code ChildCollection} from which the {@code CollectionManagementService} was
+   * retrieved.
    *
    * @param name The name of the collection to create.
-   * @return The created {@code Collection} instance.
+   * @return The created {@code ChildCollection} instance.
    * @throws XMLDBException with expected error codes. {@code ErrorCodes.VENDOR_ERROR} for any
    *         vendor specific errors that occur.
    */
-  Collection createCollection(String name) throws XMLDBException;
+  ChildCollection createCollection(String name) throws XMLDBException;
 
   /**
    * Removes a named {@code Collection} from the system. The name for the {@code Collection} to

@@ -45,7 +45,7 @@ import java.util.List;
 /**
  * A {@code Collection} represents a collection of {@code Resource}s stored within an XML database.
  * An XML database MAY expose collections as a hierarchical set of parent and child collections.
- *
+ * <p>
  * A {@code Collection} provides access to the {@code Resource}s stored by the {@code Collection}
  * and to {@code Service} instances that can operate against the {@code Collection} and the
  * {@code Resource}s stored within it. The {@code Service} mechanism provides the ability to extend
@@ -61,17 +61,6 @@ public interface Collection extends Configurable, AutoCloseable, ServiceProvider
    *         vendor specific errors that occur.
    */
   String getName() throws XMLDBException;
-
-  /**
-   * Returns the parent collection for this collection or {@code null} if no parent collection
-   * exists.
-   *
-   * @return the parent {@code Collection} instance.
-   * @throws XMLDBException with expected error codes. {@link ErrorCodes#VENDOR_ERROR} for any
-   *         vendor specific errors that occur. {@link ErrorCodes#COLLECTION_CLOSED} if the
-   *         {@code close} method has been called on the {@code Collection}
-   */
-  Collection getParentCollection() throws XMLDBException;
 
   /**
    * Returns the number of child collections under this {@code Collection} or 0 if no child
@@ -106,7 +95,7 @@ public interface Collection extends Configurable, AutoCloseable, ServiceProvider
    *         vendor specific errors that occur. {@link ErrorCodes#COLLECTION_CLOSED} if the
    *         {@code close} method has been called on the {@code Collection}
    */
-  Collection getChildCollection(String collectionName) throws XMLDBException;
+  ChildCollection getChildCollection(String collectionName) throws XMLDBException;
 
   /**
    * Returns the number of resources currently stored in this collection or 0 if the collection is
