@@ -39,54 +39,16 @@
  */
 package org.xmldb.api;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.time.Instant;
+import java.util.Objects;
 
-import org.xmldb.api.base.Collection;
-import org.xmldb.api.base.Database;
-import org.xmldb.api.base.XMLDBException;
-
-public class TestDatabase extends ConfigurableImpl implements Database {
-  private static final String DETAULT_NAME = "testdatabase";
-
-  private final String name;
-  private final Map<String, TestCollection> collections;
-
-  public TestDatabase() {
-    this(null);
+public record TestCollectionData(String name, Instant creation) {
+  public TestCollectionData(String name) {
+    this(name, Instant.now());
   }
 
-  public TestDatabase(String name) {
-    if (name == null || name.isEmpty()) {
-      this.name = DETAULT_NAME;
-    } else {
-      this.name = name;
-    }
-    collections = new HashMap<>();
-  }
-
-  @Override
-  public final String getName() throws XMLDBException {
-    return name;
-  }
-
-  public TestCollection addCollection(String collectionName) {
-    return collections.computeIfAbsent(collectionName, TestCollection::create);
-  }
-
-  @Override
-  public Collection getCollection(String uri, Properties info) throws XMLDBException {
-    return collections.get(uri);
-  }
-
-  @Override
-  public boolean acceptsURI(String uri) {
-    return uri.startsWith(DatabaseManager.URI_PREFIX + "test");
-  }
-
-  @Override
-  public String getConformanceLevel() throws XMLDBException {
-    return "0";
+  public TestCollectionData {
+    Objects.requireNonNull(name);
+    Objects.requireNonNull(creation);
   }
 }

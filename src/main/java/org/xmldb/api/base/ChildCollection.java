@@ -37,56 +37,30 @@
  * XML:DB Initiative. For more information on the XML:DB Initiative, please see
  * <https://github.com/xmldb-org/>
  */
-package org.xmldb.api;
+package org.xmldb.api.base;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-
-import org.xmldb.api.base.Collection;
-import org.xmldb.api.base.Database;
-import org.xmldb.api.base.XMLDBException;
-
-public class TestDatabase extends ConfigurableImpl implements Database {
-  private static final String DETAULT_NAME = "testdatabase";
-
-  private final String name;
-  private final Map<String, TestCollection> collections;
-
-  public TestDatabase() {
-    this(null);
-  }
-
-  public TestDatabase(String name) {
-    if (name == null || name.isEmpty()) {
-      this.name = DETAULT_NAME;
-    } else {
-      this.name = name;
-    }
-    collections = new HashMap<>();
-  }
-
-  @Override
-  public final String getName() throws XMLDBException {
-    return name;
-  }
-
-  public TestCollection addCollection(String collectionName) {
-    return collections.computeIfAbsent(collectionName, TestCollection::create);
-  }
-
-  @Override
-  public Collection getCollection(String uri, Properties info) throws XMLDBException {
-    return collections.get(uri);
-  }
-
-  @Override
-  public boolean acceptsURI(String uri) {
-    return uri.startsWith(DatabaseManager.URI_PREFIX + "test");
-  }
-
-  @Override
-  public String getConformanceLevel() throws XMLDBException {
-    return "0";
-  }
+/**
+ * A {@code ChildCollection} represents a collection of {@code Resource}s stored within an XML
+ * database. The child collection has a reference to its parent {@link Collection} that can be an
+ * other {@code ChildCollection} or the root {@link Collection} that was initially returned by the
+ * {@link org.xmldb.api.DatabaseManager}.
+ * <p>
+ * A {@code ChildCollection} provides access to the {@code Resource}s stored by the
+ * {@code ChildCollection} and to {@code Service} instances that can operate against the
+ * {@code ChildCollection} and the {@code Resource}s stored within it. The {@code Service} mechanism
+ * provides the ability to extend the functionality of a {@code ChildCollection} in ways that allows
+ * optional functionality to be enabled for the {@code ChildCollection}.
+ * 
+ * @since 3
+ */
+public interface ChildCollection extends Collection {
+  /**
+   * Returns the parent collection for this collection.
+   *
+   * @return the parent {@code Collection} instance.
+   * @throws XMLDBException with expected error codes. {@link ErrorCodes#VENDOR_ERROR} for any
+   *         vendor specific errors that occur. {@link ErrorCodes#COLLECTION_CLOSED} if the
+   *         {@code close} method has been called on the {@code Collection}
+   */
+  Collection getParentCollection() throws XMLDBException;
 }

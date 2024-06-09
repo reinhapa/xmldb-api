@@ -45,32 +45,33 @@ import static org.xmldb.api.base.ErrorCodes.NOT_IMPLEMENTED;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
+import org.xmldb.api.base.ChildCollection;
 import org.xmldb.api.base.Collection;
 import org.xmldb.api.base.Resource;
 import org.xmldb.api.base.Service;
 import org.xmldb.api.base.XMLDBException;
 
 public class TestCollection extends ConfigurableImpl implements Collection {
-  private final String name;
-  private final Collection parent;
-  private final Instant creation;
+  protected final TestCollectionData data;
+  protected final ConcurrentMap<String, TestCollectionData> childCollections;
 
   private boolean closed;
 
-  public TestCollection(String name) {
-    this(name, null);
+  public TestCollection(TestCollectionData data) {
+    this.data = data;
+    childCollections = new ConcurrentHashMap<>();
   }
 
-  public TestCollection(String name, Collection parent) {
-    this.name = name;
-    this.parent = parent;
-    creation = Instant.now();
+  public static TestCollection create(String name) {
+    return new TestCollection(new TestCollectionData(name));
   }
 
   @Override
   public final String getName() throws XMLDBException {
-    return name;
+    return data.name();
   }
 
   @Override
@@ -89,23 +90,19 @@ public class TestCollection extends ConfigurableImpl implements Collection {
   }
 
   @Override
-  public Collection getParentCollection() throws XMLDBException {
-    return parent;
-  }
-
-  @Override
   public int getChildCollectionCount() throws XMLDBException {
-    return 0;
+    return childCollections.size();
   }
 
   @Override
   public List<String> listChildCollections() throws XMLDBException {
-    return emptyList();
+    return childCollections.keySet().stream().toList();
   }
 
   @Override
-  public Collection getChildCollection(String collectionName) throws XMLDBException {
-    return null;
+  public ChildCollection getChildCollection(String collectionName) throws XMLDBException {
+    return new TestChildCollection(
+        childCollections.computeIfAbsent(collectionName, TestCollectionData::new), this);
   }
 
   @Override
@@ -155,6 +152,11 @@ public class TestCollection extends ConfigurableImpl implements Collection {
 
   @Override
   public Instant getCreationTime() throws XMLDBException {
-    return creation;
+    return data.creation();
+  }
+
+  @Override
+  public String toString() {
+    return "/%s".formatted(data.name());
   }
 }

@@ -39,54 +39,25 @@
  */
 package org.xmldb.api;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-
+import org.xmldb.api.base.ChildCollection;
 import org.xmldb.api.base.Collection;
-import org.xmldb.api.base.Database;
 import org.xmldb.api.base.XMLDBException;
 
-public class TestDatabase extends ConfigurableImpl implements Database {
-  private static final String DETAULT_NAME = "testdatabase";
+public class TestChildCollection extends TestCollection implements ChildCollection {
+  private final Collection parent;
 
-  private final String name;
-  private final Map<String, TestCollection> collections;
-
-  public TestDatabase() {
-    this(null);
-  }
-
-  public TestDatabase(String name) {
-    if (name == null || name.isEmpty()) {
-      this.name = DETAULT_NAME;
-    } else {
-      this.name = name;
-    }
-    collections = new HashMap<>();
+  public TestChildCollection(TestCollectionData data, Collection parent) {
+    super(data);
+    this.parent = parent;
   }
 
   @Override
-  public final String getName() throws XMLDBException {
-    return name;
-  }
-
-  public TestCollection addCollection(String collectionName) {
-    return collections.computeIfAbsent(collectionName, TestCollection::create);
+  public Collection getParentCollection() throws XMLDBException {
+    return parent;
   }
 
   @Override
-  public Collection getCollection(String uri, Properties info) throws XMLDBException {
-    return collections.get(uri);
-  }
-
-  @Override
-  public boolean acceptsURI(String uri) {
-    return uri.startsWith(DatabaseManager.URI_PREFIX + "test");
-  }
-
-  @Override
-  public String getConformanceLevel() throws XMLDBException {
-    return "0";
+  public String toString() {
+    return "%s/%s".formatted(parent, data.name());
   }
 }
