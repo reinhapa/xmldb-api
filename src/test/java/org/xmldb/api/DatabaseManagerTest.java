@@ -45,13 +45,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.xmldb.api.base.ErrorCodes.INSTANCE_NAME_ALREADY_REGISTERED;
-import static org.xmldb.api.base.ErrorCodes.INVALID_URI;
 import static org.xmldb.api.base.ErrorCodes.NO_SUCH_DATABASE;
 
 import java.util.Properties;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -73,7 +71,7 @@ class DatabaseManagerTest {
   Collection collection;
 
   @AfterEach
-  void tearDown() throws Exception {
+  void tearDown() {
     DatabaseManager.getDatabases().forEach(DatabaseManager::deregisterDatabase);
     DatabaseManager.setProperty("key", null);
     verifyNoMoreInteractions(dbOne, dbTwo, dbAction, collection);
@@ -208,11 +206,9 @@ class DatabaseManagerTest {
 
     when(dbOne.acceptsURI("xmldb:somedb:collection")).thenReturn(true);
     when(dbOne.getCollection("xmldb:somedb:collection", info)).thenReturn(null);
-    when(dbTwo.acceptsURI("xmldb:somedb:collection")).thenReturn(true);
-    when(dbTwo.getCollection("xmldb:somedb:collection", info)).thenReturn(collection);
 
     assertThat((Collection) DatabaseManager.withDatabase("xmldb:somedb:collection",
-        db -> db.getCollection("xmldb:somedb:collection", info))).isEqualTo(collection);
+        db -> db.getCollection("xmldb:somedb:collection", info))).isNull();
   }
 
   @Test

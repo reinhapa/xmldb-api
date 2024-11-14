@@ -123,7 +123,7 @@ public final class DatabaseManager {
    */
   public static void deregisterDatabase(final Database database) {
     registeredDatabases.removeIf(info -> {
-      if (info.database == database) {
+      if (info.database.equals(database)) {
         info.deregister();
         return true;
       }
@@ -142,8 +142,8 @@ public final class DatabaseManager {
    * This method is called when no authentication is necessary for the database.
    *
    * @param uri The database specific URI to use to locate the collection.
-   * @return A {@link Collection} instance for the requested collection or null if the collection
-   *         could not be found.
+   * @return A {@link Collection} instance for the requested collection or {@code null} if the
+   *         collection could not be found.
    * @throws XMLDBException with expected error codes.
    *         {@link org.xmldb.api.base.ErrorCodes#VENDOR_ERROR} for any vendor specific errors that
    *         occur. {@link org.xmldb.api.base.ErrorCodes#INVALID_URI} If the URI is not in a valid
@@ -163,12 +163,12 @@ public final class DatabaseManager {
    * {@code xmldb:vendordb://host:port/path/to/collection}.
    *
    * @param uri The database specific URI to use to locate the collection.
-   * @param user The username to use for authentication to the database or null if the database does
-   *        not support authentication.
-   * @param password The password to use for authentication to the database or null if the database
-   *        does not support authentication.
-   * @return A {@code Collection} instance for the requested collection or null if the collection
-   *         could not be found.
+   * @param user The username to use for authentication to the database or {@code null} if the
+   *        database does not support authentication.
+   * @param password The password to use for authentication to the database or {@code null} if the
+   *        database does not support authentication.
+   * @return A {@code Collection} instance for the requested collection or {@code null} if the
+   *         collection could not be found.
    * @throws XMLDBException with expected error codes.
    *         {@link org.xmldb.api.base.ErrorCodes#VENDOR_ERROR} for any vendor specific errors that
    *         occur. {@link org.xmldb.api.base.ErrorCodes#INVALID_URI} If the URI is not in a valid
@@ -199,8 +199,8 @@ public final class DatabaseManager {
    *
    * @param uri The database specific URI to use to locate the collection.
    * @param info The database specific connection options
-   * @return A {@code Collection} instance for the requested collection or null if the collection
-   *         could not be found.
+   * @return A {@code Collection} instance for the requested collection or {@code null} if the
+   *         collection could not be found.
    * @throws XMLDBException with expected error codes.
    *         {@link org.xmldb.api.base.ErrorCodes#VENDOR_ERROR} for any vendor specific errors that
    *         occur. {@link org.xmldb.api.base.ErrorCodes#INVALID_URI} If the URI is not in a valid
@@ -208,6 +208,7 @@ public final class DatabaseManager {
    *         instance could not be found to handle the provided URI.
    *         {@link org.xmldb.api.base.ErrorCodes#PERMISSION_DENIED} If the {@code username} and
    *         {@code password} were not accepted by the database.
+   * @since 3.0
    */
   public static Collection getCollection(final String uri, final Properties info)
       throws XMLDBException {
@@ -269,10 +270,7 @@ public final class DatabaseManager {
     for (DatabaseInfo info : registeredDatabases) {
       if (info.acceptsURI(uri)) {
         try {
-          T result = function.apply(info.database);
-          if (result != null) {
-            return result;
-          }
+          return function.apply(info.database);
         } catch (XMLDBException ex) {
           if (reason == null) {
             reason = ex;
@@ -300,6 +298,19 @@ public final class DatabaseManager {
       if (action != null) {
         action.deregister();
       }
+    }
+
+    @Override
+    public int hashCode() {
+      return database.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (obj instanceof DatabaseInfo other) {
+        return database.equals(other.database);
+      }
+      return false;
     }
   }
 }

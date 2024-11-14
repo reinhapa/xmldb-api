@@ -44,7 +44,7 @@ plugins {
 reckon {
   defaultInferredScope = 'minor'
   snapshots()
-  scopeCalc = calcScopeFromProp()
+  scopeCalc = calcScopeFromProp().or(calcScopeFromCommitMessages())
   stageCalc = calcStageFromProp()
   // enable parse of old `xmldb-api-xxx' tags
   tagParser = tagName -> java.util.Optional.of(tagName)

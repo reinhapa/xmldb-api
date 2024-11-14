@@ -104,6 +104,7 @@ public interface Database extends Configurable {
    *         vendor specific errors that occur. {@link ErrorCodes#INVALID_URI} If the URI is not in
    *         a valid format. {@link ErrorCodes#PERMISSION_DENIED} If the {@code username} and
    *         {@code password} were not accepted by the database.
+   * @since 3.0
    */
   Collection getCollection(String uri, Properties info) throws XMLDBException;
 
