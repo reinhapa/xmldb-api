@@ -41,6 +41,7 @@ package org.xmldb.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -48,6 +49,7 @@ import static org.xmldb.api.base.ErrorCodes.INSTANCE_NAME_ALREADY_REGISTERED;
 import static org.xmldb.api.base.ErrorCodes.NO_SUCH_DATABASE;
 
 import java.util.Properties;
+import java.util.Set;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -72,29 +74,29 @@ class DatabaseManagerTest {
 
   @AfterEach
   void tearDown() {
-    DatabaseManager.getDatabases().forEach(DatabaseManager::deregisterDatabase);
+    Set.of(dbOne, dbTwo).forEach(DatabaseManager::deregisterDatabase);
     DatabaseManager.setProperty("key", null);
     verifyNoMoreInteractions(dbOne, dbTwo, dbAction, collection);
   }
 
   @Test
   void testGetDatabases() throws XMLDBException {
-    assertThat(DatabaseManager.getDatabases()).isEmpty();
+    assertThat(DatabaseManager.getDatabases()).doesNotContain(dbOne, dbTwo);
 
     DatabaseManager.registerDatabase(dbOne);
-    assertThat(DatabaseManager.getDatabases()).containsExactly(dbOne);
+    assertThat(DatabaseManager.getDatabases()).contains(dbOne);
 
     DatabaseManager.registerDatabase(dbTwo);
-    assertThat(DatabaseManager.getDatabases()).containsExactlyInAnyOrder(dbOne, dbTwo);
+    assertThat(DatabaseManager.getDatabases()).contains(dbOne, dbTwo);
   }
 
   @Test
   void testRegisterDatabase() throws XMLDBException {
     DatabaseManager.registerDatabase(dbOne);
-    assertThat(DatabaseManager.getDatabases()).containsExactly(dbOne);
+    assertThat(DatabaseManager.getDatabases()).contains(dbOne);
 
     DatabaseManager.registerDatabase(dbTwo);
-    assertThat(DatabaseManager.getDatabases()).containsExactlyInAnyOrder(dbOne, dbTwo);
+    assertThat(DatabaseManager.getDatabases()).contains(dbOne, dbTwo);
   }
 
   @Test
@@ -105,7 +107,7 @@ class DatabaseManagerTest {
     DatabaseManager.deregisterDatabase(dbOne);
     DatabaseManager.deregisterDatabase(dbTwo);
 
-    assertThat(DatabaseManager.getDatabases()).isEmpty();
+    assertThat(DatabaseManager.getDatabases()).doesNotContain(dbOne, dbTwo);
     verify(dbAction).deregister();
   }
 
@@ -219,5 +221,15 @@ class DatabaseManagerTest {
           assertThat(e.errorCode).isEqualTo(NO_SUCH_DATABASE);
           assertThat(e.vendorErrorCode).isZero();
         });
+  }
+
+  @Test
+  void testServiceLoadedDatabase() {
+    assertThat(TestDatabase.isRegistered()).isTrue();
+    assertThat(DatabaseManager.getDatabases())
+        .anySatisfy(database -> assertThat(database).isInstanceOf(TestDatabase.class));
+    assertThatNoException().isThrownBy(TestDatabase::deregister);
+    assertThat(TestDatabase.isRegistered()).isFalse();
+    assertThatNoException().isThrownBy(TestDatabase::register);
   }
 }

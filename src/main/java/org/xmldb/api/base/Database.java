@@ -66,7 +66,7 @@ import java.util.Properties;
  * <p>
  * {@code Class.forName("foo.bah.Database")}
  * <p>
- * A {@code Database} may create a {@linkplain DatabaseAction} implementation in order to receive
+ * A {@code Database} may create a {@linkplain DatabaseAction} implementation to receive
  * notifications when {@linkplain org.xmldb.api.DatabaseManager#deregisterDatabase} has been called.
  */
 public interface Database extends Configurable {
@@ -124,7 +124,7 @@ public interface Database extends Configurable {
    *
    * @return the XML:DB API conformance level for this implementation.
    * @throws XMLDBException with expected error codes. {@link ErrorCodes#VENDOR_ERROR} for any
-   *         vendor specific errors that occur.
+   *         vendor-specific errors that occur.
    */
   String getConformanceLevel() throws XMLDBException;
 }

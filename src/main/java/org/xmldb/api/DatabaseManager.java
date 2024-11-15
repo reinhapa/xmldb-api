@@ -44,9 +44,14 @@ import static org.xmldb.api.base.ErrorCodes.NO_SUCH_DATABASE;
 
 import java.util.Map;
 import java.util.Properties;
+import java.util.ServiceConfigurationError;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.xmldb.api.base.Collection;
@@ -67,11 +72,49 @@ public final class DatabaseManager {
    */
   public static final String URI_PREFIX = "xmldb:";
 
-  private static final Map<String, String> properties = new ConcurrentHashMap<>();
-  private static final CopyOnWriteArrayList<DatabaseInfo> registeredDatabases =
+  private static final Logger LOGGER = Logger.getLogger(DatabaseManager.class.getName());
+  private static final Object lockForInitDrivers = new Object();
+  private static final String DATABASES_PROPERTY = "xmldb.databases";
+  private static final Map<String, String> PROPERTIES = new ConcurrentHashMap<>();
+  private static final CopyOnWriteArrayList<DatabaseInfo> REGISTERED_DATABASES =
       new CopyOnWriteArrayList<>();
 
+  private static volatile boolean driversInitialized;
+
   private DatabaseManager() {}
+
+  /*
+   * Load the initial databases by checking the System property {@code xmldb.databases} and then use
+   * the {@code ServiceLoader} mechanism
+   */
+  private static void ensureDriversInitialized() {
+    if (driversInitialized) {
+      return;
+    }
+    synchronized (lockForInitDrivers) {
+      if (driversInitialized) {
+        return;
+      }
+      try {
+        for (Database database : ServiceLoader.load(Database.class)) {
+          LOGGER.fine(() -> "Processed database %s".formatted(database));
+        }
+      } catch (ServiceConfigurationError | RuntimeException e) {
+        LOGGER.log(Level.SEVERE, "Failure processing database services", e);
+      }
+      final String databases = System.getProperty(DATABASES_PROPERTY);
+      if (databases != null && !databases.isEmpty()) {
+        Pattern.compile(":").splitAsStream(databases).forEach(database -> {
+          try {
+            Class.forName(database, true, ClassLoader.getSystemClassLoader());
+            LOGGER.fine(() -> "Processed database %s".formatted(database));
+          } catch (ClassNotFoundException | RuntimeException e) {
+            LOGGER.log(Level.SEVERE, e, () -> "Failure processing database %s".formatted(database));
+          }
+        });
+      }
+    }
+  }
 
   /**
    * Returns a set of all available {@link Database} implementations that have been registered with
@@ -83,7 +126,8 @@ public final class DatabaseManager {
    * @since 2.0
    */
   public static Set<Database> getDatabases() {
-    return registeredDatabases.stream().map(DatabaseInfo::database).collect(Collectors.toSet());
+    ensureDriversInitialized();
+    return REGISTERED_DATABASES.stream().map(DatabaseInfo::database).collect(Collectors.toSet());
   }
 
   /**
@@ -110,7 +154,9 @@ public final class DatabaseManager {
    */
   public static void registerDatabase(final Database database, final DatabaseAction action)
       throws XMLDBException {
-    if (!registeredDatabases.addIfAbsent(new DatabaseInfo(database, action))) {
+    if (REGISTERED_DATABASES.addIfAbsent(new DatabaseInfo(database, action))) {
+      LOGGER.fine(() -> "Registered database %s".formatted(database));
+    } else {
       throw new XMLDBException(INSTANCE_NAME_ALREADY_REGISTERED);
     }
   }
@@ -122,9 +168,10 @@ public final class DatabaseManager {
    * @param database The {@link Database} instance to deregister.
    */
   public static void deregisterDatabase(final Database database) {
-    registeredDatabases.removeIf(info -> {
+    REGISTERED_DATABASES.removeIf(info -> {
       if (info.database.equals(database)) {
         info.deregister();
+        LOGGER.fine(() -> "Deregistered database %s".formatted(database));
         return true;
       }
       return false;
@@ -238,7 +285,7 @@ public final class DatabaseManager {
    * @return The property value
    */
   public static String getProperty(final String name) {
-    return properties.get(name);
+    return PROPERTIES.get(name);
   }
 
   /**
@@ -249,9 +296,9 @@ public final class DatabaseManager {
    */
   public static void setProperty(final String name, final String value) {
     if (value == null) {
-      properties.remove(name);
+      PROPERTIES.remove(name);
     } else {
-      properties.put(name, value);
+      PROPERTIES.put(name, value);
     }
   }
 
@@ -264,10 +311,11 @@ public final class DatabaseManager {
    */
   static <T> T withDatabase(final String uri, final DatabaseFunction<T> function)
       throws XMLDBException {
+    ensureDriversInitialized();
     // Walk through the loaded registeredDrivers attempting to make a connection.
     // Remember the first exception that gets raised, so we can re-throw it.
     XMLDBException reason = null;
-    for (DatabaseInfo info : registeredDatabases) {
+    for (DatabaseInfo info : REGISTERED_DATABASES) {
       if (info.acceptsURI(uri)) {
         try {
           return function.apply(info.database);
