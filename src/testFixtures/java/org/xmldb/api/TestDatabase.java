@@ -48,7 +48,16 @@ import org.xmldb.api.base.Database;
 import org.xmldb.api.base.XMLDBException;
 
 public class TestDatabase extends ConfigurableImpl implements Database {
-  private static final String DETAULT_NAME = "testdatabase";
+  private static final String DEFAULT_NAME = "testdatabase";
+  private static Database registeredDatabase;
+
+  static {
+    try {
+      register();
+    } catch (XMLDBException e) {
+      throw new IllegalStateException(e);
+    }
+  }
 
   private final String name;
   private final Map<String, TestCollection> collections;
@@ -59,7 +68,7 @@ public class TestDatabase extends ConfigurableImpl implements Database {
 
   public TestDatabase(String name) {
     if (name == null || name.isEmpty()) {
-      this.name = DETAULT_NAME;
+      this.name = DEFAULT_NAME;
     } else {
       this.name = name;
     }
@@ -88,5 +97,45 @@ public class TestDatabase extends ConfigurableImpl implements Database {
   @Override
   public String getConformanceLevel() throws XMLDBException {
     return "0";
+  }
+
+  /**
+   * Returns if this database is registered against the {@link DatabaseManager}.
+   * 
+   * @return {@code true} if the driver is registered against {@link DatabaseManager}
+   */
+  public static boolean isRegistered() {
+    return registeredDatabase != null;
+  }
+
+  /**
+   * Register the driver against {@link DatabaseManager}. This is done automatically when the class
+   * is loaded. Dropping the driver from DatabaseManager's list is possible using
+   * {@link #deregister()} method.
+   *
+   * @throws IllegalStateException if the database is already registered
+   * @throws XMLDBException if registering the database fails
+   */
+  public static void register() throws XMLDBException {
+    if (isRegistered()) {
+      throw new IllegalStateException(
+          "Database is already registered. It can only be registered once.");
+    }
+    registeredDatabase = new TestDatabase(DEFAULT_NAME);
+    DatabaseManager.registerDatabase(registeredDatabase, null);
+  }
+
+  /**
+   * According to XML:DB specification, this driver is registered against {@link DatabaseManager}
+   * when the class is loaded. To avoid leaks, this method allows unregistering the database so that
+   * the class can be gc'ed if necessary.
+   *
+   * @throws IllegalStateException if the database is not registered
+   */
+  public static void deregister() {
+    if (registeredDatabase != null) {
+      DatabaseManager.deregisterDatabase(registeredDatabase);
+      registeredDatabase = null;
+    }
   }
 }
