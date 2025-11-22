@@ -37,22 +37,36 @@
  * XML:DB Initiative. For more information on the XML:DB Initiative, please see
  * <https://github.com/xmldb-org/>
  */
-plugins {
-  id 'org.ajoberstar.reckon.settings' version '1.0.1'
-}
+package org.xmldb.api.base;
 
-reckon {
-  defaultInferredScope = 'minor'
-  snapshots()
-  scopeCalc = calcScopeFromProp().or(calcScopeFromCommitMessages())
-  stageCalc = calcStageFromProp()
-  // enable parse of old `xmldb-api-xxx' tags
-  tagParser = tagName -> java.util.Optional.of(tagName)
-          .map(name -> name.replaceFirst(/xmldb-api-(\d+\.\d+)/, '$1.0'))
-          .flatMap(name -> org.ajoberstar.reckon.core.Version.parse(name))
-}
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-rootProject.name = 'xmldb-api-root'
-include 'xmldb-api'
-include 'xmldb-api-mockdb'
-include 'xmldb-api-benchmark'
+import java.util.function.Consumer;
+
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoSettings;
+
+@MockitoSettings
+class ResourceIteratorTest {
+  @Spy
+  ResourceIterator resourceIterator;
+  @Mock
+  Resource<?> resource;
+  @Mock
+  Consumer<? super Resource> action;
+
+  @Test
+  void testForEachRemaining() throws XMLDBException {
+    when(resourceIterator.hasMoreResources()).thenReturn(true, false);
+    when(resourceIterator.nextResource()).thenReturn(resource);
+
+    resourceIterator.forEachRemaining(action);
+
+    verify(action).accept(resource);
+  }
+
+}

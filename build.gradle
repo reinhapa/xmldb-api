@@ -42,10 +42,8 @@ import java.text.SimpleDateFormat
 plugins {
   id 'eclipse'
   id 'java-library'
-  id 'java-test-fixtures'
-  id 'com.diffplug.spotless' version '8.1.0'
-  id 'me.champeau.jmh' version '0.7.3'
   id 'net.nemerosa.versioning' version '3.1.0'
+  id 'com.diffplug.spotless' version '8.1.0'
   id 'org.kordamp.gradle.java-project' version '0.54.0'
 }
 
@@ -75,37 +73,6 @@ versioning {
   }
 }
 
-repositories {
-  mavenCentral()
-}
-
-test {
-  finalizedBy jacocoTestReport
-}
-
-compileJava {
-  options.compilerArgs << '-Xlint:unchecked'
-}
-
-eclipse {
-  classpath {
-    testSourceSets =  [sourceSets.test, sourceSets.jmh]
-  }
-}
-
-jar {
-  manifest.attributes 'Implementation-Title': 'XML:DB API specification',
-                      'Specification-Title': 'XML:DB API specification',
-                      'Automatic-Module-Name': "org.xmldb.api"
-}
-
-jmh {
-  jmhVersion = '1.37'
-  humanOutputFile = null
-  warmupIterations = 1
-  iterations = 1
-}
-
 spotless {
   java {
     eclipse().configFile('gradle/xmldb-api-style.xml')
@@ -113,15 +80,41 @@ spotless {
   }
 }
 
-testing {
-  suites {
-    test {
-      useJUnitJupiter()
-      dependencies {
-        implementation 'org.assertj:assertj-core:3.27.6'
-        implementation 'org.mockito:mockito-junit-jupiter:5.20.0'
-        implementation 'org.openjdk.jmh:jmh-core:1.37'
-        implementation 'org.simplify4u:slf4j-mock:2.4.0'
+allprojects {
+  repositories {
+    mavenCentral()
+  }
+}
+
+subprojects {
+  apply {
+    plugin 'java-library'
+  }
+
+  test {
+    finalizedBy jacocoTestReport
+  }
+
+  compileJava {
+    options.compilerArgs << '-Xlint:unchecked'
+  }
+
+  jar {
+    manifest.attributes 'Implementation-Title': 'XML:DB API specification',
+            'Specification-Title': 'XML:DB API specification',
+            'Automatic-Module-Name': "org.xmldb.api"
+  }
+
+  testing {
+    suites {
+      test {
+        useJUnitJupiter()
+        dependencies {
+          implementation 'org.assertj:assertj-core:3.27.6'
+          implementation 'org.mockito:mockito-junit-jupiter:5.20.0'
+          implementation 'org.openjdk.jmh:jmh-core:1.37'
+          implementation 'org.simplify4u:slf4j-mock:2.4.0'
+        }
       }
     }
   }

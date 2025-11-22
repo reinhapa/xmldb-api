@@ -38,21 +38,5 @@
  * <https://github.com/xmldb-org/>
  */
 plugins {
-  id 'org.ajoberstar.reckon.settings' version '1.0.1'
+//    id 'java-library'
 }
-
-reckon {
-  defaultInferredScope = 'minor'
-  snapshots()
-  scopeCalc = calcScopeFromProp().or(calcScopeFromCommitMessages())
-  stageCalc = calcStageFromProp()
-  // enable parse of old `xmldb-api-xxx' tags
-  tagParser = tagName -> java.util.Optional.of(tagName)
-          .map(name -> name.replaceFirst(/xmldb-api-(\d+\.\d+)/, '$1.0'))
-          .flatMap(name -> org.ajoberstar.reckon.core.Version.parse(name))
-}
-
-rootProject.name = 'xmldb-api-root'
-include 'xmldb-api'
-include 'xmldb-api-mockdb'
-include 'xmldb-api-benchmark'

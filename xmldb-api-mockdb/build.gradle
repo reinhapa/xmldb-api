@@ -37,36 +37,10 @@
  * XML:DB Initiative. For more information on the XML:DB Initiative, please see
  * <https://github.com/xmldb-org/>
  */
-package org.xmldb.api.base;
+plugins {
+//    id 'java-library'
+}
 
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.util.function.Consumer;
-
-import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.Spy;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.xmldb.api.TestResourceIterator;
-
-@MockitoSettings
-class ResourceIteratorTest {
-  @Spy
-  TestResourceIterator resourceIterator;
-  @Mock
-  Resource resource;
-  @Mock
-  Consumer<? super Resource> action;
-
-  @Test
-  void testForEachRemaining() throws XMLDBException {
-    when(resourceIterator.hasMoreResources()).thenReturn(true, false);
-    when(resourceIterator.nextResource()).thenReturn(resource);
-
-    resourceIterator.forEachRemaining(action);
-
-    verify(action).accept(resource);
-  }
-
+dependencies {
+    implementation project(':xmldb-api')
 }
