@@ -52,38 +52,108 @@ public final class XMLDBException extends Exception {
   public final int errorCode;
   public final int vendorErrorCode;
 
+  /**
+   * Constructs a new XMLDBException instance with a default error code set to
+   * {@link ErrorCodes#UNKNOWN_ERROR}.
+   *
+   * @see ErrorCodes#UNKNOWN_ERROR
+   */
   public XMLDBException() {
     this(ErrorCodes.UNKNOWN_ERROR);
   }
 
+  /**
+   * Constructs a new XMLDBException instance with a specific errorCode.
+   *
+   * @param errorCode the XML:DB error code representing the specific error condition.
+   */
   public XMLDBException(int errorCode) {
     this(errorCode, 0, null, null);
   }
 
+  /**
+   * Constructs a new XMLDBException instance with a specific errorCode and message. This
+   * constructor is used to provide a more descriptive exception by combining an XML:DB error code
+   * with a custom error message.
+   *
+   * @param errorCode the XML:DB error code representing the specific error condition.
+   * @param message a custom message providing additional details about the error.
+   */
   public XMLDBException(int errorCode, String message) {
     this(errorCode, 0, message, null);
   }
 
+  /**
+   * Constructs a new {@code XMLDBException} instance with specific XML:DB and vendor error codes.
+   *
+   * @param errorCode the XML:DB error code representing the specific error condition.
+   * @param vendorErrorCode the vendor-specific error code providing additional details about the
+   *        error.
+   */
   public XMLDBException(int errorCode, int vendorErrorCode) {
     this(errorCode, vendorErrorCode, null, null);
   }
 
+  /**
+   * Constructs a new {@code XMLDBException} instance with specific XML:DB and vendor error codes,
+   * and an error message.
+   *
+   * @param errorCode the XML:DB error code representing the specific error condition.
+   * @param vendorErrorCode the vendor-specific error code providing additional details about the
+   *        error.
+   * @param message a custom message providing additional details about the error.
+   */
   public XMLDBException(int errorCode, int vendorErrorCode, String message) {
     this(errorCode, vendorErrorCode, message, null);
   }
 
+  /**
+   * Constructs a new {@code XMLDBException} instance with a specific error code and a cause for the
+   * exception. This constructor is used when only the XML:DB error code and the underlying cause of
+   * the exception are available.
+   *
+   * @param errorCode the XML:DB error code representing the specific error condition.
+   * @param cause the underlying {@code Throwable} that caused this exception to be thrown.
+   */
   public XMLDBException(int errorCode, Throwable cause) {
     this(errorCode, 0, null, cause);
   }
 
+  /**
+   * Constructs a new {@code XMLDBException} instance with a specific error code, message, and
+   * underlying cause.
+   *
+   * @param errorCode the XML:DB error code representing the specific error condition.
+   * @param message a custom message providing additional details about the error.
+   * @param cause the underlying {@code Throwable} that caused this exception to be thrown.
+   */
   public XMLDBException(int errorCode, String message, Throwable cause) {
     this(errorCode, 0, message, cause);
   }
 
+  /**
+   * Constructs a new {@code XMLDBException} instance with specific XML:DB and vendor error codes,
+   * and the underlying cause of the exception.
+   *
+   * @param errorCode the XML:DB error code representing the specific error condition.
+   * @param vendorErrorCode the vendor-specific error code providing additional details about the
+   *        error.
+   * @param cause the underlying {@code Throwable} that caused this exception to be thrown.
+   */
   public XMLDBException(int errorCode, int vendorErrorCode, Throwable cause) {
     this(errorCode, vendorErrorCode, null, cause);
   }
 
+  /**
+   * Constructs a new {@code XMLDBException} instance with specific XML:DB and vendor error codes, a
+   * custom error message, and the underlying cause of the exception.
+   *
+   * @param errorCode the XML:DB error code representing the specific error condition.
+   * @param vendorErrorCode the vendor-specific error code providing additional details about the
+   *        error.
+   * @param message a custom message providing additional details about the error.
+   * @param cause the underlying {@code Throwable} that caused this exception to be thrown.
+   */
   public XMLDBException(int errorCode, int vendorErrorCode, String message, Throwable cause) {
     super(messageFromErrorCode(message, errorCode, vendorErrorCode), cause);
     this.errorCode = errorCode;

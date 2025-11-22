@@ -41,42 +41,17 @@ import java.text.SimpleDateFormat
 
 plugins {
   id 'eclipse'
-  id 'java-library'
   id 'net.nemerosa.versioning' version '3.1.0'
   id 'com.diffplug.spotless' version '8.1.0'
-  id 'org.kordamp.gradle.java-project' version '0.54.0'
 }
-
-apply {
-  plugin 'org.kordamp.gradle.checkstyle'
-  plugin 'org.kordamp.gradle.errorprone'
-  plugin 'org.kordamp.gradle.sonar'
-}
-
-if (!project.hasProperty('sonatypeUsername')) ext.sonatypeUsername = '**undefined**'
-if (!project.hasProperty('sonatypePassword')) ext.sonatypePassword = '**undefined**'
-if (!project.hasProperty('sonarToken')) ext.sonarToken = '**undefined**'
 
 group = 'net.sf.xmldb-org'
-
-defaultTasks 'build'
-
-java {
-  sourceCompatibility = JavaVersion.VERSION_17
-}
 
 versioning {
   def branchName = versioning.info.branch
   if (branchName != 'main') {
     version = project.version.toString().replace('-SNAPSHOT', '') + '-' + branchName.replaceAll('[^a-zA-Z\\d-]', '-') + '-SNAPSHOT'
-    println "actual version = '$version'"
-  }
-}
-
-spotless {
-  java {
-    eclipse().configFile('gradle/xmldb-api-style.xml')
-    importOrderFile('gradle/xmldb-api.importorder')
+    println "Actual version = '$version'"
   }
 }
 
@@ -88,7 +63,26 @@ allprojects {
 
 subprojects {
   apply {
+    plugin 'jacoco'
     plugin 'java-library'
+    plugin 'maven-publish'
+    plugin 'signing'
+    plugin 'com.diffplug.spotless'
+  }
+
+  spotless {
+    java {
+      eclipse().configFile("${rootDir}/gradle/xmldb-api-style.xml")
+      importOrderFile("${rootDir}/gradle/xmldb-api.importorder")
+    }
+  }
+
+  java {
+    toolchain {
+      languageVersion = JavaLanguageVersion.of(21)
+    }
+    withJavadocJar()
+    withSourcesJar()
   }
 
   test {
@@ -118,73 +112,79 @@ subprojects {
       }
     }
   }
-}
 
-config {
-  release = !project.version.toString().endsWith('-SNAPSHOT')
-  info {
-    vendor = 'reinhapa'
-    name = 'XML:DB API specification'
-    description = 'XML:DB Initiative for XML Databases'
-    inceptionYear = '2000'
-    links {
-      website = 'https://github.com/xmldb-org/xmldb-api'
-      issueTracker = 'https://github.com/xmldb-org/xmldb-api/issues'
-      scm = 'https://github.com/xmldb-org/xmldb-api.git'
+  normalization {
+    runtimeClasspath {
+      ignore('/META-INF/MANIFEST.MF')
     }
-    scm {
-      connection = 'scm:git://github.com/xmldb-org/xmldb-api.git'
-      developerConnection = 'scm:git://github.com/xmldb-org/xmldb-api.git'
-      url = 'https://github.com/xmldb-org/xmldb-api'
-    }
-    organization {
-      name = 'XML:DB Initiative for XML Databases'
-      url = 'https://github.com/xmldb-org'
-    }
-    people {
-      person {
-        id = 'xmldb-api'
-        name = 'XML:DB Initiative'
-        roles = [ 'owner' ]
-      }
-      person {
-        id = 'reinhapa'
-        name = 'Patrick Reinhart'
-        email = 'patrick@reini.net'
-        roles = [ 'developer' ]
-      }
-      person {
-        id = 'per_nyfelt'
-        name = 'Per Nyfelt'
-        email = 'per_nyfelt@users.sf.net'
-        roles = [ 'developer' ]
-      }
-      person {
-        id = 'walkabout'
-        name = 'Lars Martin'
-        email = 'walkabout@users.sf.net'
-        roles = [ 'developer' ]
-      }
-    }
-    repositories {
-      repository {
-        name = 'sonatypeRelease'
-        url  = 'https://ossrh-staging-api.central.sonatype.com/service/local/'
-        credentials {
-          username = sonatypeUsername
-          password = sonatypePassword
+  }
+
+  publishing {
+    publications {
+      mavenJava(MavenPublication) {
+        from components.java
+
+        pom {
+          name = 'XML:DB Initiative for XML Databases'
+          url = 'https://github.com/xmldb-org'
+          description = 'XML:DB Initiative for XML Databases'
+
+          licenses {
+            license {
+              name = 'The Apache License, Version 2.0'
+              url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+            }
+          }
+
+          developers {
+            developer {
+              id = 'reinhapa'
+              name = 'Patrick Reinhart'
+              email = 'patrick@reini.net'
+            }
+            developer {
+              id = 'per_nyfelt'
+              name = 'Per Nyfelt'
+              email = 'per_nyfelt@users.sf.net'
+            }
+            developer {
+              id = 'walkabout'
+              name = 'Lars Martin'
+              email = 'walkabout@users.sf.net'
+            }
+          }
+          scm {
+            connection = 'scm:git:git://github.com/xmldb-org/xmldb-api.git'
+            developerConnection = 'scm:git:ssh://github.com/xmldb-org/xmldb-api.git'
+            url = 'https://github.com/xmldb-org/xmldb-api'
+          }
         }
       }
-      repository {
-        name = 'sonatypeSnapshot'
-        url  = 'https://central.sonatype.com/repository/maven-snapshots/'
+    }
+
+    repositories {
+      maven {
+        name = 'OSSRH'
+        def releasesRepoUrl = 'https://ossrh-staging-api.central.sonatype.com/service/local/'
+        def snapshotsRepoUrl = 'https://central.sonatype.com/repository/maven-snapshots/'
+        url = version.toString().endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+
         credentials {
-          username = sonatypeUsername
-          password = sonatypePassword
+          username = findProperty('sonatypeUsername') ?: System.getenv('OSSRH_USERNAME')
+          password = findProperty('sonatypePassword') ?: System.getenv('OSSRH_PASSWORD')
         }
       }
     }
   }
+
+  signing {
+    required = !version.toString().endsWith('SNAPSHOT') && gradle.taskGraph.hasTask("publish")
+    sign publishing.publications.mavenJava
+  }
+}
+
+/*
+config {
   quality {
     errorprone {
       enabled = JavaVersion.current() != JavaVersion.VERSION_1_8
@@ -224,9 +224,4 @@ config {
     snapshotsRepository = 'sonatypeSnapshot'
   }
 }
-
-normalization {
-  runtimeClasspath {
-    ignore('/META-INF/MANIFEST.MF')
-  }
-}
+*/
