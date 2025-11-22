@@ -39,17 +39,39 @@
  */
 package org.xmldb.api.base;
 
+import java.io.Serial;
+
 /**
- * XMLDBException is thrown for all errors in the XML:DB API. It contains two error codes one an
- * XML:DB error code as defined in ErrorCodes and one vendor specific. If the error being thrown is
- * only vendor specific then errorCode MUST be set to ErrorCodes.VENDOR_ERROR.
+ * XMLDBException is thrown for all errors in the XML:DB API.
+ * <p>
+ * It contains two error codes, one an XML:DB error code as defined in ErrorCodes and one vendor
+ * specific.
+ * <p>
+ * If the error being thrown is only vendor specific, then errorCode MUST be set to
+ * ErrorCodes.VENDOR_ERROR.
  *
  * @see org.xmldb.api.base.ErrorCodes
  */
 public final class XMLDBException extends Exception {
+  @Serial
   private static final long serialVersionUID = 8841586061740517362L;
 
+  /**
+   * Represents the XML:DB error code associated with a specific error condition.
+   * <p>
+   * The {@code errorCode} field is used to identify the type of error that occurred during XML:DB
+   * operations.
+   * <p>
+   * It corresponds to predefined error codes within the XML:DB framework.
+   */
   public final int errorCode;
+  /**
+   * Represents a vendor-specific error code that provides additional information about an error
+   * condition specific to the underlying database or driver implementation.
+   * <p>
+   * This {@code  vendorErrorCode} field is primarily used to include vendor-defined error codes
+   * alongside the standard XML:DB error codes for more detailed diagnostics.
+   */
   public final int vendorErrorCode;
 
   /**
